@@ -3,6 +3,7 @@ const app = express();
 const morgan = require('morgan')
 const mongoose  = require("mongoose")
 const airportRoutes = require("./api/routes/airport")
+const userRoutes = require('./api/routes/user')
 
 mongoose.connect('mongodb://localhost:27017/Airplane_tickets_app', {
         useNewUrlParser: true,
@@ -31,6 +32,7 @@ app.use((req,res,next)=>{
 })
 
 app.use('/api',airportRoutes)
+app.use('/user',userRoutes)
 
 app.use((req,res,next)=>{
     const error = new Error("Not Found")

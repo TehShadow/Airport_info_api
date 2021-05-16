@@ -1,9 +1,10 @@
 const mongoose = require("mongoose")
-const User = require("../models/airport")
+const User = require("../models/user")
 const bcrypt = require('bcrypt')
+const jwt = require("jsonwebtoken")
 
 exports.user_signup = async (req,res,next) =>{
-    if( !await User.find({email:req.body.email})){
+    if( await User.find({email:req.body.email})){
         res.status(409).json("Invalid input")
     }else{
         bcrypt.hash(req.body.password,10, (err,hash)=>{
@@ -17,7 +18,12 @@ exports.user_signup = async (req,res,next) =>{
                     email:req.body.email,
                     password:hash
                 })
-                try {await user.save();}
+                try {
+                    user.save();
+                    res.status(200).json({
+                        message:"User created"
+                    })
+                }
                 catch(err) {
                     console.log(err);
                     res.status(500).json({
@@ -36,17 +42,26 @@ exports.user_login = async (req,res,next) => {
             message:"Auth failed"
         })
     }
-        const user = User.find({email:req.body.email})
-        bcrypt.compare(req.body.password , user.password,(err,result)=>{
+        const user = User.findOne({email:req.body.email})
+        console.log(user.password , user.email)
+        bcrypt.compare(req.body.password , user.password , (err,result)=>{
             if(err){
-                return res.status(401).json({
+                return res.status(405).json({
                     message:"Auth failed"
                 })
             }
             if(result){
+                const token = jwt.sign({
+                    email: user.email,
+                    userId : user._id
+                }, 
+                process.env.JWT_SECRET_KEY,
+                {
+                    expiresIn:"1h"
+                })
                 return res.status(200).json({
                     message:"Auth successful",
-                    toke:user._id
+                    token:token
                 })
             }
         })
