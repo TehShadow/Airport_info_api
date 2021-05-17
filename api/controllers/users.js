@@ -4,7 +4,8 @@ const bcrypt = require('bcrypt')
 const jwt = require("jsonwebtoken")
 
 exports.user_signup = async (req,res,next) =>{
-    if( await User.find({email:req.body.email})){
+    const tryUser = await User.find({email:req.body.email})
+    if(tryUser.length != 0){
         res.status(409).json("Invalid input")
     }else{
         bcrypt.hash(req.body.password,10, (err,hash)=>{
@@ -37,13 +38,13 @@ exports.user_signup = async (req,res,next) =>{
 
 exports.user_login = async (req,res,next) => {
     try{
-    if (! await User.find({email:req.body.email})){
+        const tryUser = await User.find({email:req.body.email})
+    if (tryUser.length == 0){
         return res.status(401).json({
             message:"Auth failed"
         })
     }
-        const user = User.findOne({email:req.body.email})
-        console.log(user.password , user.email)
+        const user = await User.findOne({email:req.body.email})
         bcrypt.compare(req.body.password , user.password , (err,result)=>{
             if(err){
                 return res.status(405).json({
